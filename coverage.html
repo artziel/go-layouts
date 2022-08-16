@@ -1,0 +1,920 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>go-layouts: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">github.com/artziel/go-layouts/excel.go (58.5%)</option>
+				
+				<option value="file1">github.com/artziel/go-layouts/layout.go (68.2%)</option>
+				
+				<option value="file2">github.com/artziel/go-layouts/parser.go (73.6%)</option>
+				
+				<option value="file3">github.com/artziel/go-layouts/sample/main.go (0.0%)</option>
+				
+				<option value="file4">github.com/artziel/go-layouts/tests.go (58.7%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package GoLayouts
+
+import (
+        "fmt"
+        "reflect"
+        "strings"
+        "sync"
+
+        "github.com/xuri/excelize/v2"
+)
+
+type ExcelLayout struct {
+        Layout
+        filePath string
+}
+
+func (l *ExcelLayout) GetFilePath() string <span class="cov8" title="1">{
+        return l.filePath
+}</span>
+
+func (l *ExcelLayout) ParseStruct(r interface{}) []Error <span class="cov8" title="1">{
+        s := reflect.ValueOf(r)
+        errors := []Error{}
+
+        for i := 0; i &lt; s.NumField(); i++ </span><span class="cov8" title="1">{
+                tags, err := parseOptions(string(s.Type().Field(i).Tag))
+                if err == nil </span><span class="cov8" title="1">{
+                        f := s.Field(i)
+                        value := fmt.Sprintf("%v", f)
+                        switch f.Kind() </span>{
+                        case reflect.Slice:<span class="cov0" title="0">
+                                if tags.CommaSeparatedValue </span><span class="cov0" title="0">{
+                                        values := strings.Split(value, ",")
+                                        for _, v := range values </span><span class="cov0" title="0">{
+                                                switch reflect.TypeOf(f.Interface()).Elem().Kind() </span>{
+                                                case reflect.String:<span class="cov0" title="0">
+                                                        if _, err := parseStringRules(v, tags); err != nil </span><span class="cov0" title="0">{
+                                                                for _, e := range err </span><span class="cov0" title="0">{
+                                                                        errors = append(errors, Error{RowIndex: 0, Column: tags.Column, Error: e})
+                                                                }</span>
+                                                        }
+                                                case reflect.Float32, reflect.Float64:<span class="cov0" title="0">
+                                                        if _, err := parseFloat64Rules(v, tags); err != nil </span><span class="cov0" title="0">{
+                                                                for _, e := range err </span><span class="cov0" title="0">{
+                                                                        errors = append(errors, Error{RowIndex: 0, Column: tags.Column, Error: e})
+                                                                }</span>
+                                                        }
+                                                case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:<span class="cov0" title="0">
+                                                        if _, err := parseIntRules(v, tags); err != nil </span><span class="cov0" title="0">{
+                                                                for _, e := range err </span><span class="cov0" title="0">{
+                                                                        errors = append(errors, Error{RowIndex: 0, Column: tags.Column, Error: e})
+                                                                }</span>
+                                                        }
+                                                }
+                                        }
+                                } else<span class="cov0" title="0"> {
+                                        errors = append(errors, Error{RowIndex: 0, Column: tags.Column, Error: ErrCommaSeparatedInvalid})
+                                }</span>
+                        case reflect.String:<span class="cov8" title="1">
+                                if _, err := parseStringRules(value, tags); err != nil </span><span class="cov8" title="1">{
+                                        for _, e := range err </span><span class="cov8" title="1">{
+                                                errors = append(errors, Error{RowIndex: 0, Column: tags.Column, Error: e})
+                                        }</span>
+                                }
+                        case reflect.Float32, reflect.Float64:<span class="cov0" title="0">
+                                if _, err := parseFloat64Rules(value, tags); err != nil </span><span class="cov0" title="0">{
+                                        for _, e := range err </span><span class="cov0" title="0">{
+                                                errors = append(errors, Error{RowIndex: 0, Column: tags.Column, Error: e})
+                                        }</span>
+                                }
+                        case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:<span class="cov8" title="1">
+                                if _, err := parseIntRules(value, tags); err != nil </span><span class="cov8" title="1">{
+                                        for _, e := range err </span><span class="cov8" title="1">{
+                                                errors = append(errors, Error{RowIndex: 0, Column: tags.Column, Error: e})
+                                        }</span>
+                                }
+                        }
+
+                }
+        }
+
+        <span class="cov8" title="1">if len(errors) &gt; 0 </span><span class="cov8" title="1">{
+                return errors
+        }</span>
+
+        <span class="cov0" title="0">return nil</span>
+}
+
+func (l *ExcelLayout) ParseCells(r interface{}, cells []string) []Error <span class="cov8" title="1">{
+        if l.uniques == nil </span><span class="cov8" title="1">{
+                l.uniques = map[string]map[string]int{}
+        }</span>
+
+        <span class="cov8" title="1">errors := []Error{}
+
+        s := reflect.ValueOf(r)
+
+        for i := 0; i &lt; s.Elem().NumField(); i++ </span><span class="cov8" title="1">{
+                rowIndex := int(s.Elem().FieldByName("Index").Int())
+                tags, err := parseOptions(string(s.Elem().Type().Field(i).Tag))
+                if err == nil </span><span class="cov8" title="1">{
+                        f := s.Elem().Field(i)
+                        col, _ := excelize.ColumnNameToNumber(tags.Column)
+                        col--
+                        if col &gt;= 0 &amp;&amp; col &lt;= len(cells)-1 </span><span class="cov8" title="1">{
+
+                                value := cells[col]
+
+                                switch f.Kind() </span>{
+                                case reflect.Slice:<span class="cov0" title="0">
+                                        if tags.CommaSeparatedValue </span><span class="cov0" title="0">{
+                                                values := strings.Split(value, ",")
+                                                for _, v := range values </span><span class="cov0" title="0">{
+                                                        switch reflect.TypeOf(f.Interface()).Elem().Kind() </span>{
+                                                        case reflect.String:<span class="cov0" title="0">
+                                                                if val, err := parseStringRules(v, tags); err != nil </span><span class="cov0" title="0">{
+                                                                        for _, e := range err </span><span class="cov0" title="0">{
+                                                                                errors = append(errors, Error{RowIndex: rowIndex, Column: tags.Column, Error: e})
+                                                                        }</span>
+                                                                } else<span class="cov0" title="0"> {
+                                                                        f.Set(reflect.Append(f, reflect.ValueOf(val)))
+                                                                }</span>
+                                                        case reflect.Float32, reflect.Float64:<span class="cov0" title="0">
+                                                                if val, err := parseFloat64Rules(v, tags); err != nil </span><span class="cov0" title="0">{
+                                                                        for _, e := range err </span><span class="cov0" title="0">{
+                                                                                errors = append(errors, Error{RowIndex: rowIndex, Column: tags.Column, Error: e})
+                                                                        }</span>
+                                                                } else<span class="cov0" title="0"> {
+                                                                        f.Set(reflect.Append(f, reflect.ValueOf(val)))
+                                                                }</span>
+                                                        case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:<span class="cov0" title="0">
+                                                                if val, err := parseIntRules(v, tags); err != nil </span><span class="cov0" title="0">{
+                                                                        for _, e := range err </span><span class="cov0" title="0">{
+                                                                                errors = append(errors, Error{RowIndex: rowIndex, Column: tags.Column, Error: e})
+                                                                        }</span>
+                                                                } else<span class="cov0" title="0"> {
+                                                                        f.Set(reflect.Append(f, reflect.ValueOf(val)))
+                                                                }</span>
+                                                        }
+                                                }
+                                        } else<span class="cov0" title="0"> {
+                                                errors = append(errors, Error{RowIndex: rowIndex, Column: tags.Column, Error: ErrCommaSeparatedInvalid})
+                                        }</span>
+                                case reflect.String:<span class="cov8" title="1">
+                                        if val, err := parseStringRules(value, tags); err != nil </span><span class="cov0" title="0">{
+                                                for _, e := range err </span><span class="cov0" title="0">{
+                                                        errors = append(errors, Error{RowIndex: rowIndex, Error: e, Column: tags.Column})
+                                                }</span>
+                                        } else<span class="cov8" title="1"> {
+                                                f.SetString(val)
+                                        }</span>
+                                case reflect.Float32, reflect.Float64:<span class="cov0" title="0">
+                                        if val, err := parseFloat64Rules(value, tags); err != nil </span><span class="cov0" title="0">{
+                                                for _, e := range err </span><span class="cov0" title="0">{
+                                                        errors = append(errors, Error{RowIndex: rowIndex, Column: tags.Column, Error: e})
+                                                }</span>
+                                        } else<span class="cov0" title="0"> {
+                                                f.SetFloat(float64(val))
+                                        }</span>
+                                case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:<span class="cov8" title="1">
+                                        if val, err := parseIntRules(value, tags); err != nil </span><span class="cov0" title="0">{
+                                                for _, e := range err </span><span class="cov0" title="0">{
+                                                        errors = append(errors, Error{RowIndex: rowIndex, Column: tags.Column, Error: e})
+                                                }</span>
+                                        } else<span class="cov8" title="1"> {
+                                                f.SetInt(int64(val))
+                                        }</span>
+                                }
+
+                                <span class="cov8" title="1">if tags.Unique </span><span class="cov8" title="1">{
+                                        if _, exists := l.uniques[tags.Column]; exists </span><span class="cov8" title="1">{
+                                                if _, exists := l.uniques[tags.Column][value]; exists </span><span class="cov8" title="1">{
+                                                        errors = append(errors, Error{RowIndex: rowIndex, Error: ErrNotUnique, Column: tags.Column})
+                                                }</span> else<span class="cov8" title="1"> {
+                                                        l.uniques[tags.Column][value] = rowIndex
+                                                }</span>
+                                        } else<span class="cov8" title="1"> {
+                                                l.uniques[tags.Column] = map[string]int{value: rowIndex}
+                                        }</span>
+                                }
+                        }
+
+                }
+        }
+
+        <span class="cov8" title="1">if len(errors) &gt; 0 </span><span class="cov8" title="1">{
+                return errors
+        }</span>
+
+        <span class="cov8" title="1">return nil</span>
+}
+
+func (l *ExcelLayout) ReadFile(rowType interface{}, filePath string) error <span class="cov8" title="1">{
+
+        l.errLock = &amp;sync.Mutex{}
+
+        l.filePath = filePath
+
+        hasErrors := false
+        elType := reflect.TypeOf(rowType)
+        elSlice := []interface{}{}
+
+        xlsx, err := excelize.OpenFile(filePath)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov8" title="1">defer func() </span><span class="cov8" title="1">{
+                xlsx.Close()
+        }</span>()
+        <span class="cov8" title="1">sheets := xlsx.GetSheetList()
+
+        if len(sheets) == 0 </span><span class="cov0" title="0">{
+                return ErrExcelNoSheetFound
+        }</span>
+
+        // Get all the rows in the Sheet1.
+        <span class="cov8" title="1">rows, err := xlsx.GetRows(sheets[0])
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov8" title="1">for i, row := range rows </span><span class="cov8" title="1">{
+                if i &gt; 0 </span><span class="cov8" title="1">{
+
+                        join := strings.Trim(strings.Join(row[:], ""), " \n\t")
+                        if (l.IgnoreEmpty &amp;&amp; len(join) &gt; 0) || !l.IgnoreEmpty </span><span class="cov8" title="1">{
+                                elItem := reflect.New(elType).Interface()
+                                f := reflect.Indirect(reflect.ValueOf(elItem)).FieldByName("Index")
+                                f.SetInt(int64(i) + 1)
+
+                                if err := l.ParseCells(elItem, row); err != nil </span><span class="cov0" title="0">{
+                                        hasErrors = true
+                                        l.errors = append(l.errors, err...)
+                                }</span>
+                                <span class="cov8" title="1">elSlice = append(elSlice, elItem)</span>
+                        }
+                }
+        }
+        <span class="cov8" title="1">l.Rows = elSlice
+        if hasErrors </span><span class="cov0" title="0">{
+                return ErrExcelValidationFail
+        }</span>
+        <span class="cov8" title="1">return nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">package GoLayouts
+
+import "sync"
+
+type Error struct {
+        RowIndex int
+        Error    error
+        Column   string
+        Value    string
+}
+
+type Row struct {
+        Index int
+}
+
+type Layout struct {
+        Rows        interface{}
+        uniques     map[string]map[string]int
+        errors      []Error
+        IgnoreEmpty bool
+        errLock     *sync.Mutex
+}
+
+func (l *Layout) GetErrors() []Error <span class="cov8" title="1">{
+        l.errLock.Lock()
+        defer l.errLock.Unlock()
+        return l.errors
+}</span>
+
+func (l *Layout) HasErrors() bool <span class="cov0" title="0">{
+        l.errLock.Lock()
+        defer l.errLock.Unlock()
+        return len(l.errors) &gt; 0
+}</span>
+
+func (l *Layout) AddError(err Error) <span class="cov8" title="1">{
+        l.errLock.Lock()
+        defer l.errLock.Unlock()
+        l.errors = append(l.errors, err)
+}</span>
+
+func (l *Layout) AddRow(r interface{}) error <span class="cov8" title="1">{
+        if l.Rows == nil </span><span class="cov0" title="0">{
+                l.Rows = []interface{}{}
+        }</span>
+
+        <span class="cov8" title="1">rows := l.Rows.([]interface{})
+        l.Rows = append(rows, r)
+
+        return nil</span>
+}
+
+func (l *Layout) GetRows() []interface{} <span class="cov8" title="1">{
+        return l.Rows.([]interface{})
+}</span>
+
+func (l *Layout) Iterate(fnc func(i int, r interface{}) error) error <span class="cov0" title="0">{
+
+        for i, r := range l.GetRows() </span><span class="cov0" title="0">{
+                fnc(i, r)
+        }</span>
+
+        <span class="cov0" title="0">return nil</span>
+}
+
+func (l *Layout) CountRows() int <span class="cov8" title="1">{
+        rows := l.Rows.([]interface{})
+        return len(rows)
+}</span>
+
+func NewLayout(t interface{}) Layout <span class="cov8" title="1">{
+
+        l := Layout{
+                Rows:    []interface{}{},
+                errors:  []Error{},
+                uniques: map[string]map[string]int{},
+                errLock: &amp;sync.Mutex{},
+        }
+        return l
+}</span>
+</pre>
+		
+		<pre class="file" id="file2" style="display: none">package GoLayouts
+
+import (
+        "net/mail"
+        "net/url"
+        "regexp"
+        "strconv"
+        "strings"
+)
+
+type fieldTags struct {
+        Column              string
+        CommaSeparatedValue bool
+        Email               bool
+        Required            bool
+        Regex               string
+        Max                 float64
+        Min                 float64
+        MaxLength           int64
+        MinLength           int64
+        Url                 bool
+        Unique              bool
+        hasMin              bool
+        hasMax              bool
+        hasMinLength        bool
+        hasMaxLength        bool
+}
+
+func parseOptions(tags string) (fieldTags, error) <span class="cov8" title="1">{
+        ft := fieldTags{}
+        tags = strings.TrimSpace(tags)
+
+        if len(tags) == 0 </span><span class="cov8" title="1">{
+                return ft, ErrTagNoFieldTag
+        }</span>
+
+        <span class="cov8" title="1">name := "excelLayout:"
+        res := strings.Index(tags, name)
+        if res &lt; 0 </span><span class="cov0" title="0">{
+                return ft, ErrTagNoFieldTag
+        }</span>
+        <span class="cov8" title="1">tags = tags[res+len(name):]
+        if len(tags) == 0 </span><span class="cov8" title="1">{
+                return ft, ErrTagEmptyFieldTag
+        }</span>
+
+        <span class="cov8" title="1">res = strings.Index(tags, "\"")
+        if res &lt; 0 </span><span class="cov0" title="0">{
+                return ft, ErrTagEmptyFieldTag
+        }</span>
+        <span class="cov8" title="1">tags = tags[res+1:]
+
+        res = strings.Index(tags, "\"")
+        if res &lt; 0 </span><span class="cov8" title="1">{
+                return ft, ErrTagEmptyFieldTag
+        }</span>
+        <span class="cov8" title="1">tags = strings.TrimSpace(tags[:res])
+        if len(tags) &lt; 1 </span><span class="cov8" title="1">{
+                return ft, ErrTagEmptyFieldTag
+        }</span>
+        <span class="cov8" title="1">options := strings.Split(tags, ",")
+
+        if len(options) == 0 </span><span class="cov0" title="0">{
+                return ft, ErrTagEmptyFieldTag
+        }</span>
+
+        <span class="cov8" title="1">for _, o := range options </span><span class="cov8" title="1">{
+                pair := strings.SplitN(o, ":", 2)
+                key := strings.ToLower(strings.TrimSpace(pair[0]))
+                val := ""
+                if len(pair) &gt; 1 </span><span class="cov8" title="1">{
+                        val = strings.TrimSpace(pair[1])
+                }</span>
+
+                <span class="cov8" title="1">switch key </span>{
+                case "column":<span class="cov8" title="1">
+                        if val == "" </span><span class="cov8" title="1">{
+                                return ft, ErrTagMissingColumnValue
+                        }</span>
+                        <span class="cov8" title="1">ft.Column = strings.TrimSpace(strings.ToUpper(pair[1]))</span>
+                case "commaseparatedvalue":<span class="cov8" title="1">
+                        ft.CommaSeparatedValue = true</span>
+                case "regex":<span class="cov8" title="1">
+                        if val == "" </span><span class="cov8" title="1">{
+                                return ft, ErrTagMissingRegexValue
+                        }</span>
+                        <span class="cov8" title="1">ft.Regex = strings.TrimSpace(pair[1])</span>
+                case "email":<span class="cov8" title="1">
+                        ft.Email = true</span>
+                case "required":<span class="cov8" title="1">
+                        ft.Required = true</span>
+                case "max":<span class="cov8" title="1">
+                        if val == "" </span><span class="cov8" title="1">{
+                                return ft, ErrTagMissingMaxValue
+                        }</span>
+                        <span class="cov8" title="1">ft.hasMax = true
+                        v, _ := strconv.ParseFloat(val, 32)
+                        ft.Max = v</span>
+                case "min":<span class="cov8" title="1">
+                        if val == "" </span><span class="cov8" title="1">{
+                                return ft, ErrTagMissingMinValue
+                        }</span>
+                        <span class="cov8" title="1">ft.hasMin = true
+                        v, _ := strconv.ParseFloat(val, 32)
+                        ft.Min = v</span>
+                case "maxlength":<span class="cov8" title="1">
+                        if val == "" </span><span class="cov0" title="0">{
+                                return ft, ErrTagMissingMaxValue
+                        }</span>
+                        <span class="cov8" title="1">ft.hasMaxLength = true
+                        v, _ := strconv.ParseInt(val, 0, 32)
+                        ft.MaxLength = v</span>
+                case "minlength":<span class="cov8" title="1">
+                        if val == "" </span><span class="cov0" title="0">{
+                                return ft, ErrTagMissingMaxValue
+                        }</span>
+                        <span class="cov8" title="1">ft.hasMinLength = true
+                        v, _ := strconv.ParseInt(val, 0, 32)
+                        ft.MinLength = v</span>
+                case "url":<span class="cov8" title="1">
+                        ft.Url = true</span>
+                case "unique":<span class="cov8" title="1">
+                        ft.Unique = true</span>
+                }
+
+        }
+
+        <span class="cov8" title="1">if ft.Regex != "" </span><span class="cov8" title="1">{
+                if _, err := regexp.Compile(ft.Regex); err != nil </span><span class="cov8" title="1">{
+                        return ft, ErrRegexInvalid
+                }</span>
+        }
+
+        <span class="cov8" title="1">if (ft.hasMax &amp;&amp; ft.hasMin) &amp;&amp; (ft.Max &lt; ft.Min) </span><span class="cov8" title="1">{
+                return ft, ErrTagInvalidMaxMinValues
+        }</span>
+
+        <span class="cov8" title="1">if (ft.hasMaxLength &amp;&amp; ft.hasMinLength) &amp;&amp; (ft.MaxLength &lt; ft.MinLength) </span><span class="cov0" title="0">{
+                return ft, ErrTagInvalidMaxMinLengthValues
+        }</span>
+
+        <span class="cov8" title="1">return ft, nil</span>
+}
+
+func parseStringRules(v string, tags fieldTags) (string, []error) <span class="cov8" title="1">{
+        value := strings.TrimSpace(v)
+        errors := []error{}
+        if tags.Required &amp;&amp; len(value) == 0 </span><span class="cov8" title="1">{
+                errors = append(errors, ErrRequiredValueRuleFail)
+        }</span>
+        <span class="cov8" title="1">if tags.hasMin </span><span class="cov0" title="0">{
+                errors = append(errors, ErrTagMinForbidden)
+        }</span>
+        <span class="cov8" title="1">if tags.hasMax </span><span class="cov0" title="0">{
+                errors = append(errors, ErrTagMaxForbidden)
+        }</span>
+        <span class="cov8" title="1">if len(value) &gt; 0 </span><span class="cov8" title="1">{
+
+                if tags.hasMinLength &amp;&amp; (int(tags.MinLength) &gt; len(value)) </span><span class="cov8" title="1">{
+                        errors = append(errors, ErrMinLengthValueRuleFail)
+                }</span>
+                <span class="cov8" title="1">if tags.hasMaxLength &amp;&amp; (int(tags.MaxLength) &lt; len(value)) </span><span class="cov8" title="1">{
+                        errors = append(errors, ErrMaxLengthValueRuleFail)
+                }</span>
+                <span class="cov8" title="1">if tags.Url </span><span class="cov8" title="1">{
+                        if _, err := url.ParseRequestURI(value); err != nil </span><span class="cov8" title="1">{
+                                errors = append(errors, ErrUrlValueRuleFail)
+                        }</span>
+                }
+                <span class="cov8" title="1">if tags.Email </span><span class="cov8" title="1">{
+                        if _, err := mail.ParseAddress(value); err != nil </span><span class="cov0" title="0">{
+                                errors = append(errors, ErrEmailValueRuleFail)
+                        }</span>
+                }
+                <span class="cov8" title="1">if tags.Regex != "" </span><span class="cov8" title="1">{
+                        regex, err := regexp.Compile(tags.Regex)
+                        if err != nil </span><span class="cov0" title="0">{
+                                errors = append(errors, ErrRegexInvalid)
+                        }</span>
+                        <span class="cov8" title="1">if match := regex.MatchString(value); !match </span><span class="cov8" title="1">{
+                                errors = append(errors, ErrRegexRuleFail)
+                        }</span>
+                }
+        }
+        <span class="cov8" title="1">if len(errors) &gt; 0 </span><span class="cov8" title="1">{
+                return "", errors
+        }</span>
+        <span class="cov8" title="1">return value, nil</span>
+}
+
+func parseIntRules(v string, tags fieldTags) (int64, []error) <span class="cov8" title="1">{
+        value := strings.TrimSpace(v)
+        errors := []error{}
+        if tags.Required &amp;&amp; value == "" </span><span class="cov0" title="0">{
+                errors = append(errors, ErrRequiredValueRuleFail)
+        }</span> else<span class="cov8" title="1"> if !tags.Required &amp;&amp; value == "" </span><span class="cov0" title="0">{
+                value = "0"
+        }</span>
+        <span class="cov8" title="1">if tags.hasMinLength </span><span class="cov0" title="0">{
+                errors = append(errors, ErrTagMinLengthForbidden)
+        }</span>
+        <span class="cov8" title="1">if tags.hasMaxLength </span><span class="cov0" title="0">{
+                errors = append(errors, ErrTagMaxLengthForbidden)
+        }</span>
+
+        <span class="cov8" title="1">val, err := strconv.Atoi(value)
+        if err != nil </span><span class="cov0" title="0">{
+                errors = append(errors, ErrIntegerInvalid)
+                return 0, errors
+        }</span>
+        <span class="cov8" title="1">if tags.hasMin &amp;&amp; int(tags.Min) &gt; val </span><span class="cov8" title="1">{
+                errors = append(errors, ErrMinValueRuleFail)
+        }</span>
+        <span class="cov8" title="1">if tags.hasMax &amp;&amp; int(tags.Max) &lt; val </span><span class="cov8" title="1">{
+                errors = append(errors, ErrMaxValueRuleFail)
+        }</span>
+        <span class="cov8" title="1">if len(errors) &gt; 0 </span><span class="cov8" title="1">{
+                return 0, errors
+        }</span>
+        <span class="cov8" title="1">return int64(val), nil</span>
+}
+
+func parseFloat64Rules(v string, tags fieldTags) (float64, []error) <span class="cov0" title="0">{
+        value := strings.TrimSpace(v)
+        errors := []error{}
+        if tags.Required &amp;&amp; value == "" </span><span class="cov0" title="0">{
+                errors = append(errors, ErrRequiredValueRuleFail)
+        }</span> else<span class="cov0" title="0"> if !tags.Required &amp;&amp; value == "" </span><span class="cov0" title="0">{
+                value = "0"
+        }</span>
+        <span class="cov0" title="0">if tags.hasMinLength </span><span class="cov0" title="0">{
+                errors = append(errors, ErrTagMinLengthForbidden)
+        }</span>
+        <span class="cov0" title="0">if tags.hasMaxLength </span><span class="cov0" title="0">{
+                errors = append(errors, ErrTagMaxLengthForbidden)
+        }</span>
+
+        <span class="cov0" title="0">val, err := strconv.ParseFloat(value, 64)
+        if err != nil </span><span class="cov0" title="0">{
+                errors = append(errors, ErrDecimalInvalid)
+                return 0, errors
+        }</span>
+        <span class="cov0" title="0">if tags.hasMin &amp;&amp; tags.Min &gt; val </span><span class="cov0" title="0">{
+                errors = append(errors, ErrMinValueRuleFail)
+        }</span>
+        <span class="cov0" title="0">if tags.hasMax &amp;&amp; tags.Max &lt; val </span><span class="cov0" title="0">{
+                errors = append(errors, ErrMaxValueRuleFail)
+        }</span>
+
+        <span class="cov0" title="0">if len(errors) &gt; 0 </span><span class="cov0" title="0">{
+                return 0.0, errors
+        }</span>
+
+        <span class="cov0" title="0">return val, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file3" style="display: none">package main
+
+import (
+        "fmt"
+
+        GoLayouts "github.com/artziel/go-layouts"
+)
+
+type MySampleRow struct {
+        GoLayouts.Row
+        ID       int    `excelLayout:"column:A,required,min:1,unique"`
+        Username string `excelLayout:"column:B,required,minLength:6"`
+        Password string `excelLayout:"column:C,required,minLength:8"`
+        Avatar   string `excelLayout:"column:D,url"`
+        Fullname string `excelLayout:"column:E,required"`
+        Email    string `excelLayout:"column:F,required,email"`
+        Age      int    `excelLayout:"column:G,required,min:18,max:50"`
+}
+
+func main() <span class="cov0" title="0">{
+
+        fmt.Println("Sample....")
+
+        l := GoLayouts.ExcelLayout{}
+
+        err := l.ReadFile(MySampleRow{}, "./sample.xlsx")
+        if err != nil </span><span class="cov0" title="0">{
+                for _, e := range l.GetErrors() </span><span class="cov0" title="0">{
+                        fmt.Printf("Error &gt;&gt; Cell[%v:%v] %s\n", e.Column, e.RowIndex, e.Error.Error())
+                }</span>
+        } else<span class="cov0" title="0"> {
+                rows := l.GetRows()
+                for i, r := range rows </span><span class="cov0" title="0">{
+                        row := r.(*MySampleRow)
+                        fmt.Printf("%d) ID:%v, Username: %v\n", i, row.ID, row.Username)
+                }</span>
+        }
+}
+</pre>
+		
+		<pre class="file" id="file4" style="display: none">package GoLayouts
+
+import (
+        "fmt"
+)
+
+type TestRow struct {
+        Row
+        ID       int    `excelLayout:"column:A,required,min:1,unique"`
+        Username string `excelLayout:"column:B,required,minLength:6"`
+        Password string `excelLayout:"column:C,required,minLength:8"`
+        Avatar   string `excelLayout:"column:D,url"`
+        Fullname string `excelLayout:"column:E,required,maxLength:25"`
+        Email    string `excelLayout:"column:F,required,email"`
+        Age      int    `excelLayout:"column:G,required,min:18,max:50"`
+        Key      string `excelLayout:"column:H,required,regex:p([a-z]+)ch"`
+}
+
+/**
+ * Field Tag Parser Test struct
+ */
+type FiledTagsParserTests struct {
+        input       string
+        expected    fieldTags
+        errExpected error
+}
+
+/**
+ * Compare expected data with parameter
+ */
+func (pt *FiledTagsParserTests) compareTo(ft *fieldTags) (bool, []string) <span class="cov8" title="1">{
+
+        errors := []string{}
+
+        if pt.expected.Column != ft.Column </span><span class="cov0" title="0">{
+                errors = append(errors, fmt.Sprintf(
+                        "Expected \"%v\" for field Column, recieved: \"%v\"",
+                        pt.expected.Column, ft.Column,
+                ))
+        }</span>
+        <span class="cov8" title="1">if pt.expected.CommaSeparatedValue != ft.CommaSeparatedValue </span><span class="cov0" title="0">{
+                errors = append(errors, fmt.Sprintf(
+                        "Expected \"%v\" for field CommaSeparatedValue, recieved: \"%v\"",
+                        pt.expected.Column, ft.Column,
+                ))
+        }</span>
+        <span class="cov8" title="1">if pt.expected.Email != ft.Email </span><span class="cov0" title="0">{
+                errors = append(errors, fmt.Sprintf(
+                        "Expected \"%v\" for field Email, recieved: \"%v\"",
+                        pt.expected.Email, ft.Email,
+                ))
+        }</span>
+        <span class="cov8" title="1">if pt.expected.Required != ft.Required </span><span class="cov0" title="0">{
+                errors = append(errors, fmt.Sprintf(
+                        "Expected \"%v\" for field Required, recieved: \"%v\"",
+                        pt.expected.Required, ft.Required,
+                ))
+        }</span>
+        <span class="cov8" title="1">if pt.expected.Regex != ft.Regex </span><span class="cov0" title="0">{
+                errors = append(errors, fmt.Sprintf(
+                        "Expected \"%v\" for field Regex, recieved: \"%v\"",
+                        pt.expected.Regex, ft.Regex,
+                ))
+        }</span>
+        <span class="cov8" title="1">if pt.expected.Max != ft.Max </span><span class="cov0" title="0">{
+                errors = append(errors, fmt.Sprintf(
+                        "Expected \"%v\" for field Max, recieved: \"%v\"",
+                        pt.expected.Max, ft.Max,
+                ))
+        }</span>
+        <span class="cov8" title="1">if pt.expected.Min != ft.Min </span><span class="cov0" title="0">{
+                errors = append(errors, fmt.Sprintf(
+                        "Expected \"%v\" for field Min, recieved: \"%v\"",
+                        pt.expected.Min, ft.Min,
+                ))
+        }</span>
+        <span class="cov8" title="1">if pt.expected.Url != ft.Url </span><span class="cov0" title="0">{
+                errors = append(errors, fmt.Sprintf(
+                        "Expected \"%v\" for field Url, recieved: \"%v\"",
+                        pt.expected.Url, ft.Url,
+                ))
+        }</span>
+        <span class="cov8" title="1">if pt.expected.Unique != ft.Unique </span><span class="cov0" title="0">{
+                errors = append(errors, fmt.Sprintf(
+                        "Expected \"%v\" for field Unique, recieved: \"%v\"",
+                        pt.expected.Unique, ft.Unique,
+                ))
+        }</span>
+
+        <span class="cov8" title="1">return len(errors) == 0, errors</span>
+}
+
+/**
+ * Row Parser Test struct
+ */
+type RowParserTests struct {
+        input       []string
+        expected    TestRow
+        errExpected []error
+}
+
+/**
+ * Compare expected data with parameter
+ */
+func (rt *RowParserTests) compareTo(r *TestRow) (bool, []string) <span class="cov8" title="1">{
+        errors := []string{}
+
+        if r.ID != rt.expected.ID </span><span class="cov0" title="0">{
+                errors = append(
+                        errors,
+                        fmt.Sprintf("ID expected \"%v\", Recived: \"%v\"", rt.expected.ID, r.ID),
+                )
+        }</span>
+        <span class="cov8" title="1">if r.Username != rt.expected.Username </span><span class="cov0" title="0">{
+                errors = append(
+                        errors,
+                        fmt.Sprintf("Username expected \"%v\", Recived: \"%v\"", rt.expected.Username, r.Username),
+                )
+        }</span>
+        <span class="cov8" title="1">if r.Password != rt.expected.Password </span><span class="cov0" title="0">{
+                errors = append(
+                        errors,
+                        fmt.Sprintf("Password expected \"%v\", Recived: \"%v\"", rt.expected.Password, r.Password),
+                )
+        }</span>
+        <span class="cov8" title="1">if r.Avatar != rt.expected.Avatar </span><span class="cov0" title="0">{
+                errors = append(
+                        errors,
+                        fmt.Sprintf("Avatar expected \"%v\", Recived: \"%v\"", rt.expected.Avatar, r.Avatar),
+                )
+        }</span>
+        <span class="cov8" title="1">if r.Fullname != rt.expected.Fullname </span><span class="cov0" title="0">{
+                errors = append(
+                        errors,
+                        fmt.Sprintf("Fullname expected \"%v\", Recived: \"%v\"", rt.expected.Fullname, r.Fullname),
+                )
+        }</span>
+        <span class="cov8" title="1">if r.Age != rt.expected.Age </span><span class="cov0" title="0">{
+                errors = append(
+                        errors,
+                        fmt.Sprintf("Age expected \"%v\", Recived: \"%v\"", rt.expected.Age, r.Age),
+                )
+        }</span>
+
+        <span class="cov8" title="1">return len(errors) == 0, errors</span>
+}
+
+/**
+ * Check if an error is in expected errors list
+ */
+func (rt *RowParserTests) IsErrorExpected(e error) bool <span class="cov8" title="1">{
+        if rt.errExpected == nil </span><span class="cov0" title="0">{
+                return false
+        }</span>
+
+        <span class="cov8" title="1">for _, err := range rt.errExpected </span><span class="cov8" title="1">{
+                if err == e </span><span class="cov8" title="1">{
+                        return true
+                }</span>
+        }
+
+        <span class="cov0" title="0">return false</span>
+}
+
+type StructParserTests struct {
+        input       TestRow
+        errExpected []error
+}
+
+/**
+ * Check if an error is in expected errors list
+ */
+func (rt *StructParserTests) IsErrorExpected(e error) bool <span class="cov8" title="1">{
+        if rt.errExpected == nil </span><span class="cov0" title="0">{
+                return false
+        }</span>
+
+        <span class="cov8" title="1">for _, err := range rt.errExpected </span><span class="cov8" title="1">{
+                if err == e </span><span class="cov8" title="1">{
+                        return true
+                }</span>
+        }
+
+        <span class="cov0" title="0">return false</span>
+}
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>
