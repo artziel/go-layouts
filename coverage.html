@@ -61,9 +61,7 @@
 				
 				<option value="file2">github.com/artziel/go-layouts/parser.go (73.6%)</option>
 				
-				<option value="file3">github.com/artziel/go-layouts/sample/main.go (0.0%)</option>
-				
-				<option value="file4">github.com/artziel/go-layouts/tests.go (58.7%)</option>
+				<option value="file3">github.com/artziel/go-layouts/tests.go (58.7%)</option>
 				
 				</select>
 			</div>
@@ -661,47 +659,7 @@ func parseFloat64Rules(v string, tags fieldTags) (float64, []error) <span class=
 }
 </pre>
 		
-		<pre class="file" id="file3" style="display: none">package main
-
-import (
-        "fmt"
-
-        GoLayouts "github.com/artziel/go-layouts"
-)
-
-type MySampleRow struct {
-        GoLayouts.Row
-        ID       int    `excelLayout:"column:A,required,min:1,unique"`
-        Username string `excelLayout:"column:B,required,minLength:6"`
-        Password string `excelLayout:"column:C,required,minLength:8"`
-        Avatar   string `excelLayout:"column:D,url"`
-        Fullname string `excelLayout:"column:E,required"`
-        Email    string `excelLayout:"column:F,required,email"`
-        Age      int    `excelLayout:"column:G,required,min:18,max:50"`
-}
-
-func main() <span class="cov0" title="0">{
-
-        fmt.Println("Sample....")
-
-        l := GoLayouts.ExcelLayout{}
-
-        err := l.ReadFile(MySampleRow{}, "./sample.xlsx")
-        if err != nil </span><span class="cov0" title="0">{
-                for _, e := range l.GetErrors() </span><span class="cov0" title="0">{
-                        fmt.Printf("Error &gt;&gt; Cell[%v:%v] %s\n", e.Column, e.RowIndex, e.Error.Error())
-                }</span>
-        } else<span class="cov0" title="0"> {
-                rows := l.GetRows()
-                for i, r := range rows </span><span class="cov0" title="0">{
-                        row := r.(*MySampleRow)
-                        fmt.Printf("%d) ID:%v, Username: %v\n", i, row.ID, row.Username)
-                }</span>
-        }
-}
-</pre>
-		
-		<pre class="file" id="file4" style="display: none">package GoLayouts
+		<pre class="file" id="file3" style="display: none">package GoLayouts
 
 import (
         "fmt"
