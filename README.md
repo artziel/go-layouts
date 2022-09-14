@@ -1,5 +1,5 @@
 # Golang Layouts Files Package
-Golang version 1.18
+Golang version 1.19
 
 Artziel Narvaiza <artziel@gmail.com>
 
