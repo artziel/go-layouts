@@ -1,4 +1,4 @@
-package GoLayouts
+package layouts
 
 import "sync"
 

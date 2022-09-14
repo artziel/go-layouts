@@ -1,8 +1,8 @@
-package GoLayouts
+package layouts
 
 import "errors"
 
-//ExcelLayout Errors
+// ExcelLayout Errors
 var ErrExcelNoSheetFound error = errors.New("no sheet found on file")
 var ErrExcelValidationFail error = errors.New("file rows validation fail")
 
