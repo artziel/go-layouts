@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type fieldTags struct {
@@ -14,6 +15,7 @@ type fieldTags struct {
 	Email               bool
 	Required            bool
 	Regex               string
+	DateFormat          string
 	Max                 float64
 	Min                 float64
 	MaxLength           int64
@@ -80,6 +82,11 @@ func parseOptions(tags string) (fieldTags, error) {
 			ft.Column = strings.TrimSpace(strings.ToUpper(pair[1]))
 		case "commaseparatedvalue":
 			ft.CommaSeparatedValue = true
+		case "dateformat":
+			if val == "" {
+				return ft, ErrTagMissingDateFormatValue
+			}
+			ft.DateFormat = strings.TrimSpace(pair[1])
 		case "regex":
 			if val == "" {
 				return ft, ErrTagMissingRegexValue
@@ -252,4 +259,34 @@ func parseFloat64Rules(v string, tags fieldTags) (float64, []error) {
 	}
 
 	return val, nil
+}
+
+func parseTimeRules(v string, tags fieldTags) (time.Time, []error) {
+	errors := []error{}
+	var date time.Time
+
+	if tags.Required && v == "" {
+		errors = append(errors, ErrRequiredValueRuleFail)
+	}
+	if tags.DateFormat == "" {
+		tags.DateFormat = "2006-01-02 03:04:05"
+	}
+
+	regex := regexp.MustCompile(`^(?:(?:0|[1-9]\d*)(?:\.\d*)?|\.\d+)(?:\d[eE][+\-]?\d+)?$`)
+	match := regex.MatchString(v)
+	if match {
+		in, _ := strconv.ParseFloat(v, 64)
+		excelEpoch := time.Date(1899, 12, 30, 0, 0, 0, 0, time.UTC)
+		date = excelEpoch.Add(time.Duration(in * float64(24*time.Hour)))
+	} else if parsed, err := time.Parse(tags.DateFormat, v); err == nil {
+		date = parsed
+	} else {
+		errors = append(errors, ErrDateFormatInvalid)
+	}
+
+	if len(errors) == 0 {
+		return date, nil
+	}
+
+	return date, errors
 }

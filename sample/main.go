@@ -2,19 +2,21 @@ package main
 
 import (
 	"fmt"
+	"time"
 
 	GoLayouts "github.com/artziel/go-layouts"
 )
 
 type MySampleRow struct {
 	GoLayouts.Row
-	ID       int    `excelLayout:"column:A,required,min:1,unique"`
-	Username string `excelLayout:"column:B,required,minLength:6"`
-	Password string `excelLayout:"column:C,required,minLength:8"`
-	Avatar   string `excelLayout:"column:D,url"`
-	Fullname string `excelLayout:"column:E,required"`
-	Email    string `excelLayout:"column:F,required,email"`
-	Age      int    `excelLayout:"column:G,required,min:18,max:50"`
+	ID       int       `excelLayout:"column:A,required,min:1,unique"`
+	Username string    `excelLayout:"column:B,required,minLength:6"`
+	Password string    `excelLayout:"column:C,required,minLength:8"`
+	Avatar   string    `excelLayout:"column:D,url"`
+	Fullname string    `excelLayout:"column:E,required"`
+	Email    string    `excelLayout:"column:F,required,email"`
+	Age      int       `excelLayout:"column:G,required,min:18,max:50"`
+	Date     time.Time `excelLayout:"column:H"`
 }
 
 func main() {
@@ -25,6 +27,7 @@ func main() {
 
 	err := l.ReadFile(MySampleRow{}, "./sample.xlsx")
 	if err != nil {
+		fmt.Printf("%s\n", err.Error())
 		for _, e := range l.GetErrors() {
 			fmt.Printf("Error >> Cell[%v:%v] %s\n", e.Column, e.RowIndex, e.Error.Error())
 		}
@@ -32,7 +35,7 @@ func main() {
 		rows := l.GetRows()
 		for i, r := range rows {
 			row := r.(*MySampleRow)
-			fmt.Printf("%d) ID:%v, Username: %v\n", i, row.ID, row.Username)
+			fmt.Printf("%d) ID:%v, Username: %v, Date: %v\n", i, row.ID, row.Username, row.Date)
 		}
 	}
 }

@@ -20,7 +20,7 @@ func (l *ExcelLayout) GetFilePath() string {
 
 func (l *ExcelLayout) ParseStruct(r interface{}) []Error {
 	s := reflect.ValueOf(r)
-	errors := []Error{}
+	errs := []Error{}
 
 	for i := 0; i < s.NumField(); i++ {
 		tags, err := parseOptions(string(s.Type().Field(i).Tag))
@@ -36,42 +36,70 @@ func (l *ExcelLayout) ParseStruct(r interface{}) []Error {
 						case reflect.String:
 							if _, err := parseStringRules(v, tags); err != nil {
 								for _, e := range err {
-									errors = append(errors, Error{RowIndex: 0, Column: tags.Column, Error: e})
+									errs = append(errs, Error{RowIndex: 0, Column: tags.Column, Error: e})
 								}
 							}
 						case reflect.Float32, reflect.Float64:
 							if _, err := parseFloat64Rules(v, tags); err != nil {
 								for _, e := range err {
-									errors = append(errors, Error{RowIndex: 0, Column: tags.Column, Error: e})
+									errs = append(errs, Error{RowIndex: 0, Column: tags.Column, Error: e})
 								}
 							}
 						case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 							if _, err := parseIntRules(v, tags); err != nil {
 								for _, e := range err {
-									errors = append(errors, Error{RowIndex: 0, Column: tags.Column, Error: e})
+									errs = append(errs, Error{RowIndex: 0, Column: tags.Column, Error: e})
 								}
 							}
 						}
 					}
 				} else {
-					errors = append(errors, Error{RowIndex: 0, Column: tags.Column, Error: ErrCommaSeparatedInvalid})
+					errs = append(errs, Error{RowIndex: 0, Column: tags.Column, Error: ErrCommaSeparatedInvalid})
 				}
 			case reflect.String:
 				if _, err := parseStringRules(value, tags); err != nil {
 					for _, e := range err {
-						errors = append(errors, Error{RowIndex: 0, Column: tags.Column, Error: e})
+						errs = append(errs, Error{RowIndex: 0, Column: tags.Column, Error: e})
 					}
 				}
 			case reflect.Float32, reflect.Float64:
 				if _, err := parseFloat64Rules(value, tags); err != nil {
 					for _, e := range err {
-						errors = append(errors, Error{RowIndex: 0, Column: tags.Column, Error: e})
+						errs = append(errs, Error{RowIndex: 0, Column: tags.Column, Error: e})
 					}
 				}
 			case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 				if _, err := parseIntRules(value, tags); err != nil {
 					for _, e := range err {
-						errors = append(errors, Error{RowIndex: 0, Column: tags.Column, Error: e})
+						errs = append(errs, Error{RowIndex: 0, Column: tags.Column, Error: e})
+					}
+				}
+			default:
+				switch f.Type().Name() {
+				case "Time":
+					if val, err := parseTimeRules(value, tags); err != nil {
+						for _, e := range err {
+							errs = append(errs, Error{RowIndex: 0, Column: tags.Column, Error: e})
+						}
+					} else {
+						fmt.Printf("%v\n", val)
+						f.Set(reflect.ValueOf(val))
+					}
+				default:
+					switch f.Type().String() {
+					case "time.Time":
+						if val, err := parseTimeRules(value, tags); err != nil {
+							for _, e := range err {
+								errs = append(errs, Error{RowIndex: 0, Column: tags.Column, Error: e})
+							}
+						} else {
+							f.Set(reflect.ValueOf(val))
+						}
+					default:
+						errs = append(errs, Error{
+							RowIndex: 0, Column: tags.Column,
+							Error: fmt.Errorf("unsuported %s row struct field data type", f.Type().String()),
+						})
 					}
 				}
 			}
@@ -79,8 +107,8 @@ func (l *ExcelLayout) ParseStruct(r interface{}) []Error {
 		}
 	}
 
-	if len(errors) > 0 {
-		return errors
+	if len(errs) > 0 {
+		return errs
 	}
 
 	return nil
@@ -91,7 +119,7 @@ func (l *ExcelLayout) ParseCells(r interface{}, cells []string) []Error {
 		l.uniques = map[string]map[string]int{}
 	}
 
-	errors := []Error{}
+	errs := []Error{}
 
 	s := reflect.ValueOf(r)
 
@@ -115,7 +143,7 @@ func (l *ExcelLayout) ParseCells(r interface{}, cells []string) []Error {
 							case reflect.String:
 								if val, err := parseStringRules(v, tags); err != nil {
 									for _, e := range err {
-										errors = append(errors, Error{RowIndex: rowIndex, Column: tags.Column, Error: e})
+										errs = append(errs, Error{RowIndex: rowIndex, Column: tags.Column, Error: e})
 									}
 								} else {
 									f.Set(reflect.Append(f, reflect.ValueOf(val)))
@@ -123,7 +151,7 @@ func (l *ExcelLayout) ParseCells(r interface{}, cells []string) []Error {
 							case reflect.Float32, reflect.Float64:
 								if val, err := parseFloat64Rules(v, tags); err != nil {
 									for _, e := range err {
-										errors = append(errors, Error{RowIndex: rowIndex, Column: tags.Column, Error: e})
+										errs = append(errs, Error{RowIndex: rowIndex, Column: tags.Column, Error: e})
 									}
 								} else {
 									f.Set(reflect.Append(f, reflect.ValueOf(val)))
@@ -131,7 +159,7 @@ func (l *ExcelLayout) ParseCells(r interface{}, cells []string) []Error {
 							case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 								if val, err := parseIntRules(v, tags); err != nil {
 									for _, e := range err {
-										errors = append(errors, Error{RowIndex: rowIndex, Column: tags.Column, Error: e})
+										errs = append(errs, Error{RowIndex: rowIndex, Column: tags.Column, Error: e})
 									}
 								} else {
 									f.Set(reflect.Append(f, reflect.ValueOf(val)))
@@ -139,12 +167,12 @@ func (l *ExcelLayout) ParseCells(r interface{}, cells []string) []Error {
 							}
 						}
 					} else {
-						errors = append(errors, Error{RowIndex: rowIndex, Column: tags.Column, Error: ErrCommaSeparatedInvalid})
+						errs = append(errs, Error{RowIndex: rowIndex, Column: tags.Column, Error: ErrCommaSeparatedInvalid})
 					}
 				case reflect.String:
 					if val, err := parseStringRules(value, tags); err != nil {
 						for _, e := range err {
-							errors = append(errors, Error{RowIndex: rowIndex, Error: e, Column: tags.Column})
+							errs = append(errs, Error{RowIndex: rowIndex, Error: e, Column: tags.Column})
 						}
 					} else {
 						f.SetString(val)
@@ -152,7 +180,7 @@ func (l *ExcelLayout) ParseCells(r interface{}, cells []string) []Error {
 				case reflect.Float32, reflect.Float64:
 					if val, err := parseFloat64Rules(value, tags); err != nil {
 						for _, e := range err {
-							errors = append(errors, Error{RowIndex: rowIndex, Column: tags.Column, Error: e})
+							errs = append(errs, Error{RowIndex: rowIndex, Column: tags.Column, Error: e})
 						}
 					} else {
 						f.SetFloat(float64(val))
@@ -160,17 +188,33 @@ func (l *ExcelLayout) ParseCells(r interface{}, cells []string) []Error {
 				case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 					if val, err := parseIntRules(value, tags); err != nil {
 						for _, e := range err {
-							errors = append(errors, Error{RowIndex: rowIndex, Column: tags.Column, Error: e})
+							errs = append(errs, Error{RowIndex: rowIndex, Column: tags.Column, Error: e})
 						}
 					} else {
 						f.SetInt(int64(val))
+					}
+				default:
+					switch f.Type().String() {
+					case "time.Time":
+						if val, err := parseTimeRules(value, tags); err != nil {
+							for _, e := range err {
+								errs = append(errs, Error{RowIndex: rowIndex, Column: tags.Column, Error: e})
+							}
+						} else {
+							f.Set(reflect.ValueOf(val))
+						}
+					default:
+						errs = append(errs, Error{
+							RowIndex: rowIndex, Column: tags.Column,
+							Error: fmt.Errorf("unsuported %s row struct field data type", f.Type().String()),
+						})
 					}
 				}
 
 				if tags.Unique {
 					if _, exists := l.uniques[tags.Column]; exists {
 						if _, exists := l.uniques[tags.Column][value]; exists {
-							errors = append(errors, Error{RowIndex: rowIndex, Error: ErrNotUnique, Column: tags.Column})
+							errs = append(errs, Error{RowIndex: rowIndex, Error: ErrNotUnique, Column: tags.Column})
 						} else {
 							l.uniques[tags.Column][value] = rowIndex
 						}
@@ -183,15 +227,14 @@ func (l *ExcelLayout) ParseCells(r interface{}, cells []string) []Error {
 		}
 	}
 
-	if len(errors) > 0 {
-		return errors
+	if len(errs) > 0 {
+		return errs
 	}
 
 	return nil
 }
 
 func (l *ExcelLayout) ReadFile(rowType interface{}, filePath string) error {
-
 	l.errLock = &sync.Mutex{}
 
 	l.filePath = filePath
@@ -214,7 +257,7 @@ func (l *ExcelLayout) ReadFile(rowType interface{}, filePath string) error {
 	}
 
 	// Get all the rows in the Sheet1.
-	rows, err := xlsx.GetRows(sheets[0])
+	rows, err := xlsx.GetRows(sheets[0], excelize.Options{RawCellValue: true})
 	if err != nil {
 		return err
 	}
