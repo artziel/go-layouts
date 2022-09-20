@@ -74,26 +74,27 @@ func (l *ExcelLayout) ParseStruct(r interface{}) []Error {
 						errs = append(errs, Error{RowIndex: 0, Column: tags.Column, Error: e})
 					}
 				}
+			case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+				if _, err := parseIntRules(value, tags); err != nil {
+					for _, e := range err {
+						errs = append(errs, Error{RowIndex: 0, Column: tags.Column, Error: e})
+					}
+				}
 			default:
 				switch f.Type().Name() {
 				case "Time":
-					if val, err := parseTimeRules(value, tags); err != nil {
+					if _, err := parseTimeRules(value, tags); err != nil {
 						for _, e := range err {
 							errs = append(errs, Error{RowIndex: 0, Column: tags.Column, Error: e})
 						}
-					} else {
-						fmt.Printf("%v\n", val)
-						f.Set(reflect.ValueOf(val))
 					}
 				default:
 					switch f.Type().String() {
 					case "time.Time":
-						if val, err := parseTimeRules(value, tags); err != nil {
+						if _, err := parseTimeRules(value, tags); err != nil {
 							for _, e := range err {
 								errs = append(errs, Error{RowIndex: 0, Column: tags.Column, Error: e})
 							}
-						} else {
-							f.Set(reflect.ValueOf(val))
 						}
 					default:
 						errs = append(errs, Error{
@@ -192,6 +193,14 @@ func (l *ExcelLayout) ParseCells(r interface{}, cells []string) []Error {
 						}
 					} else {
 						f.SetInt(int64(val))
+					}
+				case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+					if val, err := parseIntRules(value, tags); err != nil {
+						for _, e := range err {
+							errs = append(errs, Error{RowIndex: rowIndex, Column: tags.Column, Error: e})
+						}
+					} else {
+						f.SetUint(uint64(val))
 					}
 				default:
 					switch f.Type().String() {
