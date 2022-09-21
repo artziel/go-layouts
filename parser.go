@@ -262,11 +262,14 @@ func parseFloat64Rules(v string, tags fieldTags) (float64, []error) {
 }
 
 func parseTimeRules(v string, tags fieldTags) (time.Time, []error) {
-	errors := []error{}
+	errs := []error{}
 	var date time.Time
 
 	if tags.Required && v == "" {
-		errors = append(errors, ErrRequiredValueRuleFail)
+		errs = append(errs, ErrRequiredValueRuleFail)
+	}
+	if !tags.Required && v == "" {
+		return date, errs
 	}
 	if tags.DateFormat == "" {
 		tags.DateFormat = "2006-01-02 03:04:05"
@@ -281,12 +284,12 @@ func parseTimeRules(v string, tags fieldTags) (time.Time, []error) {
 	} else if parsed, err := time.Parse(tags.DateFormat, v); err == nil {
 		date = parsed
 	} else {
-		errors = append(errors, ErrDateFormatInvalid)
+		errs = append(errs, ErrDateFormatInvalid)
 	}
 
-	if len(errors) == 0 {
+	if len(errs) == 0 {
 		return date, nil
 	}
 
-	return date, errors
+	return date, errs
 }
