@@ -42,7 +42,11 @@ func (l *Layout) AddError(err Error) {
 func (l *Layout) AddErrors(errs []Error) {
 	l.errLock.Lock()
 	defer l.errLock.Unlock()
-	l.errors = append(l.errors, errs...)
+	if errs != nil {
+		if len(errs) > 0 {
+			l.errors = append(l.errors, errs...)
+		}
+	}
 }
 
 func (l *Layout) AddRow(r interface{}) error {
